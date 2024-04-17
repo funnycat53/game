@@ -4,7 +4,7 @@
  </head>
 
 <body>
-    <canvas id="myCanvas" width=800 height=400 style="top: 50%; left: 50%; transform: translate(-50%, -50%); position: fixed; border: 1px solid; background-color: olive;"></canvas>
+    <canvas id="myCanvas" width=1000 height=700 style="top: 50%; left: 50%; transform: translate(-50%, -50%); position: fixed; border: 1px solid; background-color: olive;"></canvas>
  
 <script>
 
@@ -75,6 +75,7 @@ var ctx = myCanvas.getContext("2d"); // Get the drawing context for the canvas
      score = 0;                   // no score
      game_over = false;           // not over yet
      bats = [];                   // no bats
+     melons = []
      AddNewBat();                 // get the bats started
      AddNewMelon();
      }
@@ -103,6 +104,19 @@ var ctx = myCanvas.getContext("2d"); // Get the drawing context for the canvas
     ShowScore();                                            // show the score
     bug.y = myCanvas.height - bug.MyImg.height;             // ensure bug always at bottom of canvas
     bug.Do_Frame_Things();                                  // bug does what bugs do 
+    if (!game_over) {
+                for (var i = 0; i < melons.length; i++) {
+                    melons[i].Do_Frame_Things();
+                    if (melons[i].y > myCanvas.height) {
+                        melons.splice(i, 1); // Remove the melon if it goes off the bottom
+                        score -= 1; // Deduct score by 5 if melon isn't caught
+                    }
+                    if (ImagesTouching(bug, melons[i])) {
+                        melons.splice(i, 1); // Remove the melon if the bug catches it
+                        score += 1; // Increment score by 10 if melon is caught
+                    }
+                }
+            }
     if (game_over) ShowGameOver()                           // if game over 
      else {
            for (var i=0; i < bats.length; i++) {            // otherwise for every bat: 
