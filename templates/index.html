@@ -49,22 +49,25 @@ var ctx = myCanvas.getContext("2d"); // Get the drawing context for the canvas
 
  var bug = new MySprite("https://s2js.com/img/etc/ladybug.png");         // The bug
  var bats = [];                                                         // The bats
- var melons = [];                                                        
+ var melons = [];            
+ var time_remaining = 180; 
+ addEventListener("keyup", MyKeyUpHandler);
+ addEventListener("keydown", MyKeyDownHandler);                      // listen for keystrokes                                            
 
 
  function AddNewBat() {
-        var noobat= new MySprite("https://s2js.com/img/etc/bat.png"); 
-        noobat.velocity_y = (Math.random()*2) + 0.5;    // velocity is between 1 and 3
-        noobat.GoRandomX();                           // position randomly
-        bats.push(noobat);                            // add the noob to the array 
-        setTimeout(AddNewBat, Math.random()*5000);    // never more than 3 secs between bats
+    var noobat= new MySprite("https://s2js.com/img/etc/bat.png"); 
+    noobat.velocity_y = (Math.random()*2) + 0.5;    // velocity is between 1 and 3
+    noobat.GoRandomX();                           // position randomly
+    bats.push(noobat);                            // add the noob to the array 
+    setTimeout(AddNewBat, Math.random()*5000);    // never more than 3 secs between bats
         }
 
  function AddNewMelon() {
     var meloon = new MySprite("https://s2js.com/img/etc/watermelon2.png")
     meloon.velocity_y = (Math.random()*2) + 1;
     meloon.GoRandomX();
-    meloon.push(meloon);
+    melons.push(meloon);
     setTimeout(AddNewMelon, Math.random()*5000);
  }
 
@@ -74,10 +77,12 @@ var ctx = myCanvas.getContext("2d"); // Get the drawing context for the canvas
      //
      score = 0;                   // no score
      game_over = false;           // not over yet
+     time_remaining = 10;
      bats = [];                   // no bats
-     melons = []
+     melons = [];
      AddNewBat();                 // get the bats started
      AddNewMelon();
+     bug.y = myCanvas.height - bug.MyImg.height;             // ensure bug always at bottom of canvas
      }
 
 
@@ -87,6 +92,11 @@ var ctx = myCanvas.getContext("2d"); // Get the drawing context for the canvas
         ctx.fillText("Score: " + score, 0, 20); 
         }
 
+ function ShowTimer() {
+        ctx.fillStyle = "blue";
+        ctx.font = "20px Arial";
+        ctx.fillText("Time: " + Math.ceil(time_remaining), 0, 40);
+        }
 
  function ShowGameOver() {
         ctx.fillStyle= "red";
@@ -102,25 +112,32 @@ var ctx = myCanvas.getContext("2d"); // Get the drawing context for the canvas
  function Do_a_Frame () {
     ctx.clearRect(0, 0, myCanvas.width, myCanvas.height);   // clear the background
     ShowScore();                                            // show the score
-    bug.y = myCanvas.height - bug.MyImg.height;             // ensure bug always at bottom of canvas
+    ShowTimer();  
     bug.Do_Frame_Things();                                  // bug does what bugs do 
-    if (!game_over) {
-                for (var i = 0; i < melons.length; i++) {
-                    melons[i].Do_Frame_Things();
-                    if (melons[i].y > myCanvas.height) {
-                        melons.splice(i, 1); // Remove the melon if it goes off the bottom
-                        score -= 1; // Deduct score by 5 if melon isn't caught
-                    }
-                    if (ImagesTouching(bug, melons[i])) {
-                        melons.splice(i, 1); // Remove the melon if the bug catches it
-                        score += 1; // Increment score by 10 if melon is caught
-                    }
-                }
+    ctx.drawImage(bug.MyImg, bug.x, bug.y); // draw the bug on the canvas
+        if (!game_over) {
+        time_remaining -= 1/FPS; // decrement time remaining
+        if (time_remaining <= 0) {
+            game_over = true;
+        } 
+        for (var i = 0; i < melons.length; i++) {
+            melons[i].Do_Frame_Things();
+            ctx.drawImage(melons[i].MyImg, melons[i].x, melons[i].y);
+            if (melons[i].y > myCanvas.height) {
+                melons.splice(i, 1); // Remove the melon if it goes off the bottom
+                score -= 1; // Deduct score by 5 if melon isn't caught
             }
-    if (game_over) ShowGameOver()                           // if game over 
-     else {
+            if (ImagesTouching(bug, melons[i])) {
+                melons.splice(i, 1); // Remove the melon if the bug catches it
+                score += 1; // Increment score by 10 if melon is caught
+            }
+        }
+    }
+    if (game_over) ShowGameOver()
+    else {
            for (var i=0; i < bats.length; i++) {            // otherwise for every bat: 
-              bats[i].Do_Frame_Things();                          // all the bats do what all the bats do
+              bats[i].Do_Frame_Things();
+              ctx.drawImage(bats[i].MyImg, bats[i].x, bats[i].y);                          
               if (ImagesTouching(bug, bats[i])) game_over= true;  // check for touching
               if (bats[i].y > myCanvas.height) {                  // if it's gone past the bottom
                  bats.splice(i, 1);                               // delete the bat
@@ -129,22 +146,49 @@ var ctx = myCanvas.getContext("2d"); // Get the drawing context for the canvas
                  }
               }
           }
-    }
+ }
+
+//  function MyKeyDownHandler (MyEvent) { 
+//    if (MyEvent.keyCode == 37 && bug.x > 0) {bug.x = bug.x - 10};                               // left
+//    if (MyEvent.keyCode == 39 && bug.x + bug.MyImg.width < myCanvas.width) {bug.x = bug.x+10};  // right
+//    if (MyEvent.keyCode == 83 && game_over) restart_game();                                     // S to restart 
+//    }
 
 
- function MyKeyDownHandler (MyEvent) { 
-   if (MyEvent.keyCode == 37 && bug.x > 0) {bug.x = bug.x - 10};                               // left
-   if (MyEvent.keyCode == 39 && bug.x + bug.MyImg.width < myCanvas.width) {bug.x = bug.x+10};  // right
-   if (MyEvent.keyCode == 83 && game_over) restart_game();                                     // S to restart 
+
+MySprite.prototype.Do_Frame_Things = function() {
+        // if the x-velocity is to the left, only apply the velocity if the sprite is not off-screen to the left<
+        if ((this.velocity_x < 0) && (this.x > 0))  this.x = this.x + this.velocity_x;
+
+        // if the x-velocity is to the right, only apply the velocity if the sprite is not off-screen to the right<
+        if ((this.velocity_x > 0) && (this.x + this.MyImg.width < myCanvas.width )) this.x = this.x + this.velocity_x;
+
+        // if the y-velocity is upward, only apply the velocity if the sprite is not off-screen at the top
+        if ((this.velocity_y < 0) && (this.y > 0))  this.y = this.y + this.velocity_y;
+
+        // if the y-velocity is downward, only apply the velocity if the sprite is not off-screen at the bottom
+        if ((this.velocity_y > 0) && (this.y + this.MyImg.height< myCanvas.height)) this.y = this.y + this.velocity_y;
+        }       
+
+   function MyKeyUpHandler (MyEvent) { 
+   if (MyEvent.keyCode == 37) {bug.velocity_x=  0};    // not left
+   if (MyEvent.keyCode == 38) {bug.velocity_y=  0};    // not up
+   if (MyEvent.keyCode == 39) {bug.velocity_x=  0};    // not right
+   if (MyEvent.keyCode == 40) {bug.velocity_y=  0};    // not down
    }
 
+var quickness = 6
 
-
- 
+   function MyKeyDownHandler (MyEvent) { 
+   if (MyEvent.keyCode == 37) {bug.velocity_x=  -quickness};      // left
+   if (MyEvent.keyCode == 38) {bug.velocity_y=  -quickness};      // up
+   if (MyEvent.keyCode == 39) {bug.velocity_x=   quickness};      // right
+   if (MyEvent.keyCode == 40) {bug.velocity_y=   quickness};      // down
+   if (MyEvent.keyCode == 83 && game_over) restart_game();    // S to restart 
+   MyEvent.preventDefault()
+   }
 
  setInterval(Do_a_Frame, 1000/FPS);                                  // set my frame renderer
- addEventListener("keydown", MyKeyDownHandler);                      // listen for keystrokes  
-
  restart_game();                                                     // and start
 </script>
 </body>
