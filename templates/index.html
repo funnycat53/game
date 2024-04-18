@@ -4,7 +4,7 @@
  </head>
 
 <body>
-    <canvas id="myCanvas" width=1000 height=700 style="top: 50%; left: 50%; transform: translate(-50%, -50%); position: fixed; border: 1px solid; background-color: olive;"></canvas>
+    <canvas id="myCanvas" width=900 height=700 style="top: 50%; left: 50%; transform: translate(-50%, -50%); position: fixed; border: 1px solid; background-color: olive;"></canvas>
  
 <script>
 
@@ -21,14 +21,16 @@ var ctx = myCanvas.getContext("2d"); // Get the drawing context for the canvas
         this.velocity_x = 0;
         this.velocity_y = 0;
         this.MyImg = new Image();
-        this.MyImg.src = img_url ;
+        this.MyImg.src = img_url;
         }
 
     MySprite.prototype.Do_Frame_Things = function() {
         if (this.visible) ctx.drawImage(this.MyImg, this.x, this.y);  // draw the thing
         this.x = this.x + this.velocity_x;
-        this.y = this.y + this.velocity_y;                            // move the thing
-        }       
+        if (this.velocity_y > 0 && this.y + this.MyImg.height < myCanvas.height) {
+        this.y = this.y + this.velocity_y;
+    }
+}
 
     MySprite.prototype.GoRandomX = function() {
         this.x = Math.random() * (myCanvas.width - this.MyImg.width); // pick a random x-position, always fully visible
@@ -37,20 +39,26 @@ var ctx = myCanvas.getContext("2d"); // Get the drawing context for the canvas
 
 
  function ImagesTouching(thing1, thing2) {
-          //
-          // This function detects whether two MySprites are touching - very useful function
-          // 
           if (!thing1.visible  || !thing2.visible) return false;         
           if (thing1.x >= thing2.x + thing2.MyImg.width || thing1.x + thing1.MyImg.width <= thing2.x) return false;   
           if (thing1.y >= thing2.y + thing2.MyImg.height || thing1.y + thing1.MyImg.height <= thing2.y) return false; 
           return true;                                                                                                
           }
 
+function MelonTouchingBug(melon, bug) {
+    return (
+        bug.x < melon.x + melon.MyImg.width &&
+        bug.x + bug.MyImg.width > melon.x &&
+        bug.y < melon.y + melon.MyImg.height &&
+        bug.y + bug.MyImg.height > melon.y
+    );
+}
+
 
  var bug = new MySprite("https://s2js.com/img/etc/ladybug.png");         // The bug
  var bats = [];                                                         // The bats
  var melons = [];            
- var time_remaining = 180; 
+ var time_remaining = 30; 
  addEventListener("keyup", MyKeyUpHandler);
  addEventListener("keydown", MyKeyDownHandler);                      // listen for keystrokes                                            
 
@@ -72,12 +80,9 @@ var ctx = myCanvas.getContext("2d"); // Get the drawing context for the canvas
  }
 
  function restart_game() {
-     // This gets called when the 'S' key is pressed and just sets 
-     // some important variables back to the start.
-     //
      score = 0;                   // no score
      game_over = false;           // not over yet
-     time_remaining = 10;
+     time_remaining = 30;
      bats = [];                   // no bats
      melons = [];
      AddNewBat();                 // get the bats started
@@ -109,64 +114,68 @@ var ctx = myCanvas.getContext("2d"); // Get the drawing context for the canvas
         }
 
 
- function Do_a_Frame () {
+        function Do_a_Frame() {
     ctx.clearRect(0, 0, myCanvas.width, myCanvas.height);   // clear the background
     ShowScore();                                            // show the score
-    ShowTimer();  
-    bug.Do_Frame_Things();                                  // bug does what bugs do 
+    ShowTimer();
+    bug.Do_Frame_Things();                                  // bug does what bugs do
     ctx.drawImage(bug.MyImg, bug.x, bug.y); // draw the bug on the canvas
-        if (!game_over) {
-        time_remaining -= 1/FPS; // decrement time remaining
+    if (!game_over) {
+        time_remaining -= 1 / FPS; // decrement time remaining
         if (time_remaining <= 0) {
             game_over = true;
-        } 
-        for (var i = 0; i < melons.length; i++) {
-            melons[i].Do_Frame_Things();
-            ctx.drawImage(melons[i].MyImg, melons[i].x, melons[i].y);
-            if (melons[i].y > myCanvas.height) {
-                melons.splice(i, 1); // Remove the melon if it goes off the bottom
-                score -= 1; // Deduct score by 5 if melon isn't caught
+        }
+
+       for (var i = 0; i < melons.length; i++) {
+            var melon = melons[i];
+            melon.Do_Frame_Things();
+            ctx.drawImage(melon.MyImg, melon.x, melon.y);
+
+            if (MelonTouchingBug(melon, bug)) {
+        melons.splice(i, 1);
+        score += 1; // Increment score when a melon is picked up
+        console.log("Melon picked up");
+    }
+            if (melon.y + melon.MyImg.height > myCanvas.height) {
+    melons.splice(i, 1);
+    i--; // Adjust index after removing element
+    score -= 1; // Deduct score if melon isn't caught
+    console.log("Melon removed");
             }
-            if (ImagesTouching(bug, melons[i])) {
-                melons.splice(i, 1); // Remove the melon if the bug catches it
-                score += 1; // Increment score by 10 if melon is caught
+        }
+
+        for (var j = 0; j < bats.length; j++) {
+            var bat = bats[j];
+            bat.Do_Frame_Things();
+            ctx.drawImage(bat.MyImg, bat.x, bat.y);
+
+            console.log("Bat Y: " + bat.y);
+
+            if (bat.y + bat.MyImg.height > myCanvas.height) {
+    bats.splice(j, 1);
+    j--; // Adjust index after removing element
+    score++; // Increment score if bat goes off the bottom
+    console.log("Bat removed");
+            }
+        }
+
+        for (var k = 0; k < bats.length; k++) {
+            if (ImagesTouching(bug, bats[k])) {
+                game_over = true; // Game over if bug touches a bat
+                break; // Exit loop early since game over
             }
         }
     }
-    if (game_over) ShowGameOver()
-    else {
-           for (var i=0; i < bats.length; i++) {            // otherwise for every bat: 
-              bats[i].Do_Frame_Things();
-              ctx.drawImage(bats[i].MyImg, bats[i].x, bats[i].y);                          
-              if (ImagesTouching(bug, bats[i])) game_over= true;  // check for touching
-              if (bats[i].y > myCanvas.height) {                  // if it's gone past the bottom
-                 bats.splice(i, 1);                               // delete the bat
-                 score++;                                         // bump the score
-                 i--;                                             // don't skip the next element
-                 }
-              }
-          }
- }
-
-//  function MyKeyDownHandler (MyEvent) { 
-//    if (MyEvent.keyCode == 37 && bug.x > 0) {bug.x = bug.x - 10};                               // left
-//    if (MyEvent.keyCode == 39 && bug.x + bug.MyImg.width < myCanvas.width) {bug.x = bug.x+10};  // right
-//    if (MyEvent.keyCode == 83 && game_over) restart_game();                                     // S to restart 
-//    }
-
-
+    if (game_over) ShowGameOver();
+}
 
 MySprite.prototype.Do_Frame_Things = function() {
-        // if the x-velocity is to the left, only apply the velocity if the sprite is not off-screen to the left<
         if ((this.velocity_x < 0) && (this.x > 0))  this.x = this.x + this.velocity_x;
 
-        // if the x-velocity is to the right, only apply the velocity if the sprite is not off-screen to the right<
         if ((this.velocity_x > 0) && (this.x + this.MyImg.width < myCanvas.width )) this.x = this.x + this.velocity_x;
 
-        // if the y-velocity is upward, only apply the velocity if the sprite is not off-screen at the top
         if ((this.velocity_y < 0) && (this.y > 0))  this.y = this.y + this.velocity_y;
 
-        // if the y-velocity is downward, only apply the velocity if the sprite is not off-screen at the bottom
         if ((this.velocity_y > 0) && (this.y + this.MyImg.height< myCanvas.height)) this.y = this.y + this.velocity_y;
         }       
 
@@ -188,8 +197,8 @@ var quickness = 6
    MyEvent.preventDefault()
    }
 
- setInterval(Do_a_Frame, 1000/FPS);                                  // set my frame renderer
- restart_game();                                                     // and start
+ setInterval(Do_a_Frame, 1000/FPS);                                  
+ restart_game();                                                     
 </script>
 </body>
 </html>
