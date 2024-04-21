@@ -12,7 +12,10 @@ var ctx = myCanvas.getContext("2d"); // Get the drawing context for the canvas
  var FPS = 40;                        // How many frames per second
  var score = 0;                       
  var game_over = false;
-
+ var initialVelocity = {
+    bats: { x: (Math.random() * 1) + 0.5, y: (Math.random() * 1.5) + 0.5 },
+    melons: { x: (Math.random() * 1) + 0.5, y: (Math.random() * 1.5) + 0.5 }
+};
 
  function MySprite (img_url) {
         this.x = 0;
@@ -24,14 +27,27 @@ var ctx = myCanvas.getContext("2d"); // Get the drawing context for the canvas
         this.MyImg.src = img_url;
         }
 
-    MySprite.prototype.Do_Frame_Things = function() {
-        if (this.visible) ctx.drawImage(this.MyImg, this.x, this.y);  // draw the thing
-        this.x = this.x + this.velocity_x;
-        if (this.velocity_y > 0 && this.y + this.MyImg.height < myCanvas.height) {
-        this.y = this.y + this.velocity_y;
+        MySprite.prototype.Do_Frame_Things = function() {
+    if (this.visible) ctx.drawImage(this.MyImg, this.x, this.y);  // draw the thing
+    
+    // Move diagonally if both velocity_x and velocity_y are non-zero
+    if (this.velocity_x !== 0 && this.velocity_y !== 0) {
+        this.x += this.velocity_x;
+        this.y += this.velocity_y;
+    } else {
+        // Otherwise, move vertically or horizontally
+        if (this.velocity_x !== 0) {
+            if ((this.velocity_x < 0 && this.x > 0) || (this.velocity_x > 0 && this.x + this.MyImg.width < myCanvas.width)) {
+                this.x += this.velocity_x;
+            }
+        }
+        if (this.velocity_y !== 0) {
+            if ((this.velocity_y < 0 && this.y > 0) || (this.velocity_y > 0 && this.y + this.MyImg.height < myCanvas.height)) {
+                this.y += this.velocity_y;
+            }
+        }
     }
 }
-
     MySprite.prototype.GoRandomX = function() {
         this.x = Math.random() * (myCanvas.width - this.MyImg.width); // pick a random x-position, always fully visible
         }
@@ -58,31 +74,52 @@ function MelonTouchingBug(melon, bug) {
  var bug = new MySprite("https://s2js.com/img/etc/ladybug.png");         // The bug
  var bats = [];                                                         // The bats
  var melons = [];            
- var time_remaining = 30; 
+ var time_remaining = 180; 
  addEventListener("keyup", MyKeyUpHandler);
  addEventListener("keydown", MyKeyDownHandler);                      // listen for keystrokes                                            
 
 
  function AddNewBat() {
     var noobat= new MySprite("https://s2js.com/img/etc/bat.png"); 
-    noobat.velocity_y = (Math.random()*2) + 0.5;    // velocity is between 1 and 3
+    if (Math.random() < 0.5) {
+        noobat.velocity_y = initialVelocity.bats.y;
+        noobat.velocity_x = 0; // No horizontal velocity
+    } else {
+        noobat.velocity_y = initialVelocity.bats.y;
+        noobat.velocity_x = (Math.random() < 0.5 ? -1 : 1) * initialVelocity.bats.x;
+    }
     noobat.GoRandomX();                           // position randomly
-    bats.push(noobat);                            // add the noob to the array 
-    setTimeout(AddNewBat, Math.random()*5000);    // never more than 3 secs between bats
+    bats.push(noobat); 
+    setTimeout(AddNewBat, Math.random()*3000);    // never more than 3 secs between bats
         }
 
- function AddNewMelon() {
-    var meloon = new MySprite("https://s2js.com/img/etc/watermelon2.png")
-    meloon.velocity_y = (Math.random()*2) + 1;
+        function AddNewMelon() {
+    var meloon = new MySprite("https://s2js.com/img/etc/watermelon2.png");
+    if (Math.random() < 0.5) {
+        meloon.velocity_y = initialVelocity.melons.y;
+        meloon.velocity_x = 0;
+    } else {
+        meloon.velocity_y = initialVelocity.melons.y;
+        meloon.velocity_x = (Math.random() < 0.5 ? -1 : 1) * initialVelocity.melons.x; 
+    }
     meloon.GoRandomX();
     melons.push(meloon);
-    setTimeout(AddNewMelon, Math.random()*5000);
- }
+    setTimeout(AddNewMelon, Math.random() * 3000);
+}
+
+
+setInterval(function() {
+    initialVelocity.bats.x *= 1.3; 
+    initialVelocity.bats.y *= 1.3;
+    initialVelocity.melons.x *= 1.3;
+    initialVelocity.melons.y *= 1.3;
+}, 10000);
+
 
  function restart_game() {
      score = 0;                   // no score
      game_over = false;           // not over yet
-     time_remaining = 30;
+     time_remaining = 180;
      bats = [];                   // no bats
      melons = [];
      AddNewBat();                 // get the bats started
@@ -134,13 +171,11 @@ function MelonTouchingBug(melon, bug) {
             if (MelonTouchingBug(melon, bug)) {
         melons.splice(i, 1);
         score += 1; // Increment score when a melon is picked up
-        console.log("Melon picked up");
     }
             if (melon.y + melon.MyImg.height > myCanvas.height) {
     melons.splice(i, 1);
     i--; // Adjust index after removing element
     score -= 1; // Deduct score if melon isn't caught
-    console.log("Melon removed");
             }
         }
 
@@ -149,13 +184,11 @@ function MelonTouchingBug(melon, bug) {
             bat.Do_Frame_Things();
             ctx.drawImage(bat.MyImg, bat.x, bat.y);
 
-            console.log("Bat Y: " + bat.y);
 
             if (bat.y + bat.MyImg.height > myCanvas.height) {
     bats.splice(j, 1);
     j--; // Adjust index after removing element
     score++; // Increment score if bat goes off the bottom
-    console.log("Bat removed");
             }
         }
 
