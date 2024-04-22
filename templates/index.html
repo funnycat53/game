@@ -1,11 +1,11 @@
+<!DOCTYPE html>
 <html>
  <head>
   <title> Video spēlīte </title>
  </head>
 
 <body>
-    <canvas id="myCanvas" width=900 height=700 style="top: 50%; left: 50%; transform: translate(-50%, -50%); position: fixed; border: 1px solid; background-color: olive;"></canvas>
- 
+<canvas id="myCanvas" width=900 height=700 style="top: 50%; left: 50%; transform: translate(-50%, -50%); position: fixed; border: 1px solid; background:url(http://localhost:8000/images/canvas.png) "></canvas>
 <script>
 
 var ctx = myCanvas.getContext("2d"); // Get the drawing context for the canvas
@@ -71,7 +71,7 @@ function MelonTouchingBug(melon, bug) {
 }
 
 
- var bug = new MySprite("https://s2js.com/img/etc/ladybug.png");         // The bug
+ var bug = new MySprite("http://localhost:8000/images/paw1.png");         // The bug
  var bats = [];                                                         // The bats
  var melons = [];            
  var time_remaining = 180; 
@@ -80,7 +80,7 @@ function MelonTouchingBug(melon, bug) {
 
 
  function AddNewBat() {
-    var noobat= new MySprite("https://s2js.com/img/etc/bat.png"); 
+    var noobat= new MySprite("http://localhost:8000/images/realpufferfish.png"); 
     if (Math.random() < 0.5) {
         noobat.velocity_y = initialVelocity.bats.y;
         noobat.velocity_x = 0; // No horizontal velocity
@@ -94,7 +94,7 @@ function MelonTouchingBug(melon, bug) {
         }
 
         function AddNewMelon() {
-    var meloon = new MySprite("https://s2js.com/img/etc/watermelon2.png");
+    var meloon = new MySprite("http://localhost:8000/images/realfish.png");
     if (Math.random() < 0.5) {
         meloon.velocity_y = initialVelocity.melons.y;
         meloon.velocity_x = 0;
