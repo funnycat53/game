@@ -1,23 +1,32 @@
 <!DOCTYPE html>
 <html>
  <head>
-  <title> Video spēlīte </title>
+  <title> Gold & Puffer </title>
  </head>
 
 <body>
 <canvas id="myCanvas" width=900 height=700 style="top: 50%; left: 50%; transform: translate(-50%, -50%); position: fixed; border: 1px solid; background:url(http://localhost:8000/images/canvas.png) "></canvas>
 <script>
 
-var ctx = myCanvas.getContext("2d"); // Get the drawing context for the canvas
- var FPS = 40;                        // How many frames per second
- var score = 0;                       
- var game_over = false;
- var initialVelocity = {
+var ctx = myCanvas.getContext("2d"); 
+var FPS = 40;                        
+var score = 0;                       
+var game_over = false;
+var initialVelocity = {
     bats: { x: (Math.random() * 1) + 0.5, y: (Math.random() * 1.5) + 0.5 },
     melons: { x: (Math.random() * 1) + 0.5, y: (Math.random() * 1.5) + 0.5 }
 };
+var batTimeout;
+var melonTimeout;
+var bug = new MySprite("http://localhost:8000/images/pawz1.png");         
+var bats = [];                                                         
+var melons = [];            
+var time_remaining = 180; 
+addEventListener("keyup", MyKeyUpHandler);
+addEventListener("keydown", MyKeyDownHandler);                                                                  
 
- function MySprite (img_url) {
+
+    function MySprite (img_url) {
         this.x = 0;
         this.y = 0; 
         this.visible= true;
@@ -27,120 +36,116 @@ var ctx = myCanvas.getContext("2d"); // Get the drawing context for the canvas
         this.MyImg.src = img_url;
         }
 
-        MySprite.prototype.Do_Frame_Things = function() {
-    if (this.visible) ctx.drawImage(this.MyImg, this.x, this.y);  // draw the thing
+    MySprite.prototype.Do_Frame_Things = function() {
+        if (this.visible) ctx.drawImage(this.MyImg, this.x, this.y); 
     
-    // Move diagonally if both velocity_x and velocity_y are non-zero
-    if (this.velocity_x !== 0 && this.velocity_y !== 0) {
-        this.x += this.velocity_x;
-        this.y += this.velocity_y;
-    } else {
-        // Otherwise, move vertically or horizontally
-        if (this.velocity_x !== 0) {
-            if ((this.velocity_x < 0 && this.x > 0) || (this.velocity_x > 0 && this.x + this.MyImg.width < myCanvas.width)) {
-                this.x += this.velocity_x;
+        if (this.velocity_x !== 0 && this.velocity_y !== 0) {
+            this.x += this.velocity_x;
+            this.y += this.velocity_y;
+        } else {
+            if (this.velocity_x !== 0) {
+                if ((this.velocity_x < 0 && this.x > 0) || (this.velocity_x > 0 && this.x + this.MyImg.width < myCanvas.width)) {
+                    this.x += this.velocity_x;
             }
         }
-        if (this.velocity_y !== 0) {
-            if ((this.velocity_y < 0 && this.y > 0) || (this.velocity_y > 0 && this.y + this.MyImg.height < myCanvas.height)) {
-                this.y += this.velocity_y;
+            if (this.velocity_y !== 0) {
+                if ((this.velocity_y < 0 && this.y > 0) || (this.velocity_y > 0 && this.y + this.MyImg.height < myCanvas.height)) {
+                    this.y += this.velocity_y;
             }
         }
     }
 }
     MySprite.prototype.GoRandomX = function() {
-        this.x = Math.random() * (myCanvas.width - this.MyImg.width); // pick a random x-position, always fully visible
+        this.x = Math.random() * (myCanvas.width - this.MyImg.width); 
         }
 
 
 
- function ImagesTouching(thing1, thing2) {
+    function ImagesTouching(thing1, thing2) {
           if (!thing1.visible  || !thing2.visible) return false;         
           if (thing1.x >= thing2.x + thing2.MyImg.width || thing1.x + thing1.MyImg.width <= thing2.x) return false;   
           if (thing1.y >= thing2.y + thing2.MyImg.height || thing1.y + thing1.MyImg.height <= thing2.y) return false; 
           return true;                                                                                                
           }
 
-function MelonTouchingBug(melon, bug) {
-    return (
-        bug.x < melon.x + melon.MyImg.width &&
-        bug.x + bug.MyImg.width > melon.x &&
-        bug.y < melon.y + melon.MyImg.height &&
-        bug.y + bug.MyImg.height > melon.y
+    function MelonTouchingBug(melon, bug) {
+        return (
+            bug.x < melon.x + melon.MyImg.width &&
+            bug.x + bug.MyImg.width > melon.x &&
+            bug.y < melon.y + melon.MyImg.height &&
+            bug.y + bug.MyImg.height > melon.y
     );
 }
 
-
- var bug = new MySprite("http://localhost:8000/images/paw1.png");         // The bug
- var bats = [];                                                         // The bats
- var melons = [];            
- var time_remaining = 180; 
- addEventListener("keyup", MyKeyUpHandler);
- addEventListener("keydown", MyKeyDownHandler);                      // listen for keystrokes                                            
-
-
- function AddNewBat() {
-    var noobat= new MySprite("http://localhost:8000/images/realpufferfish.png"); 
-    if (Math.random() < 0.5) {
-        noobat.velocity_y = initialVelocity.bats.y;
-        noobat.velocity_x = 0; // No horizontal velocity
-    } else {
-        noobat.velocity_y = initialVelocity.bats.y;
-        noobat.velocity_x = (Math.random() < 0.5 ? -1 : 1) * initialVelocity.bats.x;
+    function AddNewBat() {
+        var noobat = new MySprite("http://localhost:8000/images/pufferfish.png");
+            if (Math.random() < 0.5) {
+            noobat.velocity_y = initialVelocity.bats.y;
+            noobat.velocity_x = 0; 
+        } else {
+            noobat.velocity_y = initialVelocity.bats.y;
+            noobat.velocity_x = (Math.random() < 0.5 ? -1 : 1) * initialVelocity.bats.x;
     }
-    noobat.GoRandomX();                           // position randomly
-    bats.push(noobat); 
-    setTimeout(AddNewBat, Math.random()*3000);    // never more than 3 secs between bats
-        }
+        noobat.GoRandomX(); 
+        bats.push(noobat);
+        setTimeout(AddNewBat, Math.random() * 5000 / Math.pow(1.1, (Math.log(initialVelocity.bats.x) / Math.log(1.1))));
+}
 
-        function AddNewMelon() {
-    var meloon = new MySprite("http://localhost:8000/images/realfish.png");
-    if (Math.random() < 0.5) {
-        meloon.velocity_y = initialVelocity.melons.y;
-        meloon.velocity_x = 0;
-    } else {
-        meloon.velocity_y = initialVelocity.melons.y;
-        meloon.velocity_x = (Math.random() < 0.5 ? -1 : 1) * initialVelocity.melons.x; 
+    function AddNewMelon() {
+        var meloon = new MySprite("http://localhost:8000/images/goldfish.png");
+        if (Math.random() < 0.5) {
+            meloon.velocity_y = initialVelocity.melons.y;
+            meloon.velocity_x = 0;
+        } else {
+            meloon.velocity_y = initialVelocity.melons.y;
+            meloon.velocity_x = (Math.random() < 0.5 ? -1 : 1) * initialVelocity.melons.x;
     }
-    meloon.GoRandomX();
-    melons.push(meloon);
-    setTimeout(AddNewMelon, Math.random() * 3000);
+        meloon.GoRandomX();
+        melons.push(meloon);
+        setTimeout(AddNewMelon, Math.random() * 4000 / Math.pow(1.1, (Math.log(initialVelocity.melons.x) / Math.log(1.1))));
 }
 
 
-setInterval(function() {
-    initialVelocity.bats.x *= 1.3; 
-    initialVelocity.bats.y *= 1.3;
-    initialVelocity.melons.x *= 1.3;
-    initialVelocity.melons.y *= 1.3;
-}, 10000);
+    setInterval(function() {
+        initialVelocity.bats.x *= 1.1; 
+        initialVelocity.bats.y *= 1.1;
+        initialVelocity.melons.x *= 1.1;
+        initialVelocity.melons.y *= 1.1;
+    }, 10000);
 
 
- function restart_game() {
-     score = 0;                   // no score
-     game_over = false;           // not over yet
-     time_remaining = 180;
-     bats = [];                   // no bats
-     melons = [];
-     AddNewBat();                 // get the bats started
-     AddNewMelon();
-     bug.y = myCanvas.height - bug.MyImg.height;             // ensure bug always at bottom of canvas
-     }
+    function restart_game() {
+    score = 0;
+    game_over = false;
+    time_remaining = 180;
+    initialVelocity = {
+        bats: { x: (Math.random() * 1) + 0.5, y: (Math.random() * 1) + 0.5 },
+        melons: { x: (Math.random() * 1) + 0.5, y: (Math.random() * 1) + 0.5 }
+    };
+    bats = [];
+    melons = [];
+    clearTimeout(batTimeout);
+    clearTimeout(melonTimeout);
+    AddNewBat();
+    AddNewMelon();
+    bug.x = 0;
+    bug.y = myCanvas.height - bug.MyImg.height;
+}
 
 
- function ShowScore() {
-        ctx.fillStyle= "purple";
+    function ShowScore() {
+        ctx.fillStyle= "white";
         ctx.font = "20px Arial";
         ctx.fillText("Score: " + score, 0, 20); 
         }
 
- function ShowTimer() {
-        ctx.fillStyle = "blue";
+    function ShowTimer() {
+        ctx.fillStyle = "white";
         ctx.font = "20px Arial";
         ctx.fillText("Time: " + Math.ceil(time_remaining), 0, 40);
         }
 
- function ShowGameOver() {
+    function ShowGameOver() {
         ctx.fillStyle= "red";
         ctx.font = "bold 50px Arial";
         ctx.textAlign="center";
@@ -151,15 +156,15 @@ setInterval(function() {
         }
 
 
-        function Do_a_Frame() {
-    ctx.clearRect(0, 0, myCanvas.width, myCanvas.height);   // clear the background
-    ShowScore();                                            // show the score
-    ShowTimer();
-    bug.Do_Frame_Things();                                  // bug does what bugs do
-    ctx.drawImage(bug.MyImg, bug.x, bug.y); // draw the bug on the canvas
-    if (!game_over) {
-        time_remaining -= 1 / FPS; // decrement time remaining
-        if (time_remaining <= 0) {
+    function Do_a_Frame() {
+        ctx.clearRect(0, 0, myCanvas.width, myCanvas.height);   
+        ShowScore();                                            
+        ShowTimer();
+        bug.Do_Frame_Things();                                  
+        ctx.drawImage(bug.MyImg, bug.x, bug.y); 
+        if (!game_over) {
+            time_remaining -= 1 / FPS; 
+            if (time_remaining <= 0) {
             game_over = true;
         }
 
@@ -168,14 +173,14 @@ setInterval(function() {
             melon.Do_Frame_Things();
             ctx.drawImage(melon.MyImg, melon.x, melon.y);
 
-            if (MelonTouchingBug(melon, bug)) {
-        melons.splice(i, 1);
-        score += 1; // Increment score when a melon is picked up
+        if (MelonTouchingBug(melon, bug)) {
+            melons.splice(i, 1);
+            score += 1; 
     }
-            if (melon.y + melon.MyImg.height > myCanvas.height) {
-    melons.splice(i, 1);
-    i--; // Adjust index after removing element
-    score -= 1; // Deduct score if melon isn't caught
+        if (melon.y + melon.MyImg.height > myCanvas.height) {
+            melons.splice(i, 1);
+            i--; 
+            score -= 1; 
             }
         }
 
@@ -187,22 +192,22 @@ setInterval(function() {
 
             if (bat.y + bat.MyImg.height > myCanvas.height) {
     bats.splice(j, 1);
-    j--; // Adjust index after removing element
-    score++; // Increment score if bat goes off the bottom
+    j--; 
+    score++; 
             }
         }
 
         for (var k = 0; k < bats.length; k++) {
             if (ImagesTouching(bug, bats[k])) {
-                game_over = true; // Game over if bug touches a bat
-                break; // Exit loop early since game over
+                game_over = true; 
+                break; 
             }
         }
     }
     if (game_over) ShowGameOver();
 }
 
-MySprite.prototype.Do_Frame_Things = function() {
+    MySprite.prototype.Do_Frame_Things = function() {
         if ((this.velocity_x < 0) && (this.x > 0))  this.x = this.x + this.velocity_x;
 
         if ((this.velocity_x > 0) && (this.x + this.MyImg.width < myCanvas.width )) this.x = this.x + this.velocity_x;
@@ -212,26 +217,26 @@ MySprite.prototype.Do_Frame_Things = function() {
         if ((this.velocity_y > 0) && (this.y + this.MyImg.height< myCanvas.height)) this.y = this.y + this.velocity_y;
         }       
 
-   function MyKeyUpHandler (MyEvent) { 
-   if (MyEvent.keyCode == 37) {bug.velocity_x=  0};    // not left
-   if (MyEvent.keyCode == 38) {bug.velocity_y=  0};    // not up
-   if (MyEvent.keyCode == 39) {bug.velocity_x=  0};    // not right
-   if (MyEvent.keyCode == 40) {bug.velocity_y=  0};    // not down
+    function MyKeyUpHandler (MyEvent) { 
+        if (MyEvent.keyCode == 37) {bug.velocity_x=  0};    
+        if (MyEvent.keyCode == 38) {bug.velocity_y=  0};    
+        if (MyEvent.keyCode == 39) {bug.velocity_x=  0};    
+        if (MyEvent.keyCode == 40) {bug.velocity_y=  0};    
    }
 
-var quickness = 6
+    var quickness = 6
 
-   function MyKeyDownHandler (MyEvent) { 
-   if (MyEvent.keyCode == 37) {bug.velocity_x=  -quickness};      // left
-   if (MyEvent.keyCode == 38) {bug.velocity_y=  -quickness};      // up
-   if (MyEvent.keyCode == 39) {bug.velocity_x=   quickness};      // right
-   if (MyEvent.keyCode == 40) {bug.velocity_y=   quickness};      // down
-   if (MyEvent.keyCode == 83 && game_over) restart_game();    // S to restart 
-   MyEvent.preventDefault()
+    function MyKeyDownHandler (MyEvent) { 
+        if (MyEvent.keyCode == 37) {bug.velocity_x=  -quickness};     
+        if (MyEvent.keyCode == 38) {bug.velocity_y=  -quickness};      
+        if (MyEvent.keyCode == 39) {bug.velocity_x=   quickness};      
+        if (MyEvent.keyCode == 40) {bug.velocity_y=   quickness};      
+        if (MyEvent.keyCode == 83 && game_over) restart_game();    
+        MyEvent.preventDefault()
    }
 
- setInterval(Do_a_Frame, 1000/FPS);                                  
- restart_game();                                                     
+    setInterval(Do_a_Frame, 1000/FPS);                                  
+    restart_game();                                                     
 </script>
 </body>
 </html>
