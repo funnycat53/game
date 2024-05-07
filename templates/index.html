@@ -13,20 +13,20 @@ var FPS = 40;
 var score = 0;                       
 var game_over = false;
 var initialVelocity = {
-    bats: { x: (Math.random() * 1) + 0.5, y: (Math.random() * 1.5) + 0.5 },
-    melons: { x: (Math.random() * 1) + 0.5, y: (Math.random() * 1.5) + 0.5 }
+    Pufferfish: { x: (Math.random() * 1) + 0.5, y: (Math.random() * 1.5) + 0.5 },
+    Fish: { x: (Math.random() * 1) + 0.5, y: (Math.random() * 1.5) + 0.5 }
 };
-var batTimeout;
-var melonTimeout;
-var bug = new MySprite("http://localhost:8000/images/pawz1.png");         
-var bats = [];                                                         
-var melons = [];            
+var PufferfishTimeout;
+var FishTimeout;
+var Paw = new Player("http://localhost:8000/images/pawz1.png");         
+var Pufferfish = [];                                                         
+var Fish = [];            
 var time_remaining = 180; 
 addEventListener("keyup", MyKeyUpHandler);
 addEventListener("keydown", MyKeyDownHandler);                                                                  
 
 
-    function MySprite (img_url) {
+    function Player (img_url) {
         this.x = 0;
         this.y = 0; 
         this.visible= true;
@@ -36,7 +36,7 @@ addEventListener("keydown", MyKeyDownHandler);
         this.MyImg.src = img_url;
         }
 
-    MySprite.prototype.Do_Frame_Things = function() {
+    Player.prototype.Do_Frame_Things = function() {
         if (this.visible) ctx.drawImage(this.MyImg, this.x, this.y); 
     
         if (this.velocity_x !== 0 && this.velocity_y !== 0) {
@@ -55,7 +55,7 @@ addEventListener("keydown", MyKeyDownHandler);
         }
     }
 }
-    MySprite.prototype.GoRandomX = function() {
+    Player.prototype.GoRandomX = function() {
         this.x = Math.random() * (myCanvas.width - this.MyImg.width); 
         }
 
@@ -68,49 +68,49 @@ addEventListener("keydown", MyKeyDownHandler);
           return true;                                                                                                
           }
 
-    function MelonTouchingBug(melon, bug) {
+    function FishsTouchingPaw(Fishs, Paw) {
         return (
-            bug.x < melon.x + melon.MyImg.width &&
-            bug.x + bug.MyImg.width > melon.x &&
-            bug.y < melon.y + melon.MyImg.height &&
-            bug.y + bug.MyImg.height > melon.y
+            Paw.x < Fishs.x + Fishs.MyImg.width &&
+            Paw.x + Paw.MyImg.width > Fishs.x &&
+            Paw.y < Fishs.y + Fishs.MyImg.height &&
+            Paw.y + Paw.MyImg.height > Fishs.y
     );
 }
 
-    function AddNewBat() {
-        var noobat = new MySprite("http://localhost:8000/images/pufferfish.png");
+    function AddNewPufferfishs() {
+        var noPufferfish = new Player("http://localhost:8000/images/pufferfish.png");
             if (Math.random() < 0.5) {
-            noobat.velocity_y = initialVelocity.bats.y;
-            noobat.velocity_x = 0; 
+            noPufferfish.velocity_y = initialVelocity.Pufferfish.y;
+            noPufferfish.velocity_x = 0; 
         } else {
-            noobat.velocity_y = initialVelocity.bats.y;
-            noobat.velocity_x = (Math.random() < 0.5 ? -1 : 1) * initialVelocity.bats.x;
+            noPufferfish.velocity_y = initialVelocity.Pufferfish.y;
+            noPufferfish.velocity_x = (Math.random() < 0.5 ? -1 : 1) * initialVelocity.Pufferfish.x;
     }
-        noobat.GoRandomX(); 
-        bats.push(noobat);
-        setTimeout(AddNewBat, Math.random() * 5000 / Math.pow(1.1, (Math.log(initialVelocity.bats.x) / Math.log(1.1))));
+        noPufferfish.GoRandomX(); 
+        Pufferfish.push(noPufferfish);
+        setTimeout(AddNewPufferfishs, Math.random() * 5000 / Math.pow(1.1, (Math.log(initialVelocity.Pufferfish.x) / Math.log(1.1))));
 }
 
-    function AddNewMelon() {
-        var meloon = new MySprite("http://localhost:8000/images/goldfish.png");
+    function AddNewFishs() {
+        var noFish = new Player("http://localhost:8000/images/goldfish.png");
         if (Math.random() < 0.5) {
-            meloon.velocity_y = initialVelocity.melons.y;
-            meloon.velocity_x = 0;
+            noFish.velocity_y = initialVelocity.Fish.y;
+            noFish.velocity_x = 0;
         } else {
-            meloon.velocity_y = initialVelocity.melons.y;
-            meloon.velocity_x = (Math.random() < 0.5 ? -1 : 1) * initialVelocity.melons.x;
+            noFish.velocity_y = initialVelocity.Fish.y;
+            noFish.velocity_x = (Math.random() < 0.5 ? -1 : 1) * initialVelocity.Fish.x;
     }
-        meloon.GoRandomX();
-        melons.push(meloon);
-        setTimeout(AddNewMelon, Math.random() * 4000 / Math.pow(1.1, (Math.log(initialVelocity.melons.x) / Math.log(1.1))));
+        noFish.GoRandomX();
+        Fish.push(noFish);
+        setTimeout(AddNewFishs, Math.random() * 4000 / Math.pow(1.1, (Math.log(initialVelocity.Fish.x) / Math.log(1.1))));
 }
 
 
     setInterval(function() {
-        initialVelocity.bats.x *= 1.1; 
-        initialVelocity.bats.y *= 1.1;
-        initialVelocity.melons.x *= 1.1;
-        initialVelocity.melons.y *= 1.1;
+        initialVelocity.Pufferfish.x *= 1.1; 
+        initialVelocity.Pufferfish.y *= 1.1;
+        initialVelocity.Fish.x *= 1.1;
+        initialVelocity.Fish.y *= 1.1;
     }, 10000);
 
 
@@ -119,32 +119,31 @@ addEventListener("keydown", MyKeyDownHandler);
     game_over = false;
     time_remaining = 180;
     initialVelocity = {
-        bats: { x: (Math.random() * 1) + 0.5, y: (Math.random() * 1) + 0.5 },
-        melons: { x: (Math.random() * 1) + 0.5, y: (Math.random() * 1) + 0.5 }
+        Pufferfish: { x: (Math.random() * 1) + 0.5, y: (Math.random() * 1) + 0.5 },
+        Fish: { x: (Math.random() * 1) + 0.5, y: (Math.random() * 1) + 0.5 }
     };
-    bats = [];
-    melons = [];
-    clearTimeout(batTimeout);
-    clearTimeout(melonTimeout);
-    AddNewBat();
-    AddNewMelon();
-    bug.x = 0;
-    bug.y = myCanvas.height - bug.MyImg.height;
+    Pufferfish = [];
+    Fish = [];
+    clearTimeout(PufferfishTimeout);
+    clearTimeout(FishTimeout);
+    AddNewPufferfishs();
+    AddNewFishs();
+    Paw.x = 0;
+    Paw.y = myCanvas.height - Paw.MyImg.height;
 }
 
 
     function ShowScore() {
         ctx.fillStyle= "white";
         ctx.font = "20px Arial";
-        ctx.fillText("Score: " + score, 0, 20); 
+        ctx.fillText("Punkti: " + score, 15, 20); 
         }
 
-    function ShowTimer() {
-        ctx.fillStyle = "white";
-        ctx.font = "20px Arial";
-        ctx.fillText("Time: " + Math.ceil(time_remaining), 0, 40);
-        }
-
+        function ShowTimer() {
+    ctx.fillStyle = "white";
+    ctx.font = "20px Arial";
+    ctx.fillText("Laiks: " + Math.ceil(time_remaining), myCanvas.width - 105, 20);
+}
     function ShowGameOver() {
         ctx.fillStyle= "red";
         ctx.font = "bold 50px Arial";
@@ -160,45 +159,45 @@ addEventListener("keydown", MyKeyDownHandler);
         ctx.clearRect(0, 0, myCanvas.width, myCanvas.height);   
         ShowScore();                                            
         ShowTimer();
-        bug.Do_Frame_Things();                                  
-        ctx.drawImage(bug.MyImg, bug.x, bug.y); 
+        Paw.Do_Frame_Things();                                  
+        ctx.drawImage(Paw.MyImg, Paw.x, Paw.y); 
         if (!game_over) {
             time_remaining -= 1 / FPS; 
             if (time_remaining <= 0) {
             game_over = true;
         }
 
-       for (var i = 0; i < melons.length; i++) {
-            var melon = melons[i];
-            melon.Do_Frame_Things();
-            ctx.drawImage(melon.MyImg, melon.x, melon.y);
+       for (var i = 0; i < Fish.length; i++) {
+            var Fishs = Fish[i];
+            Fishs.Do_Frame_Things();
+            ctx.drawImage(Fishs.MyImg, Fishs.x, Fishs.y);
 
-        if (MelonTouchingBug(melon, bug)) {
-            melons.splice(i, 1);
+        if (FishsTouchingPaw(Fishs, Paw)) {
+            Fish.splice(i, 1);
             score += 1; 
     }
-        if (melon.y + melon.MyImg.height > myCanvas.height) {
-            melons.splice(i, 1);
+        if (Fishs.y + Fishs.MyImg.height > myCanvas.height) {
+            Fish.splice(i, 1);
             i--; 
             score -= 1; 
             }
         }
 
-        for (var j = 0; j < bats.length; j++) {
-            var bat = bats[j];
-            bat.Do_Frame_Things();
-            ctx.drawImage(bat.MyImg, bat.x, bat.y);
+        for (var j = 0; j < Pufferfish.length; j++) {
+            var Pufferfishs = Pufferfish[j];
+            Pufferfishs.Do_Frame_Things();
+            ctx.drawImage(Pufferfishs.MyImg, Pufferfishs.x, Pufferfishs.y);
 
 
-            if (bat.y + bat.MyImg.height > myCanvas.height) {
-    bats.splice(j, 1);
+            if (Pufferfishs.y + Pufferfishs.MyImg.height > myCanvas.height) {
+    Pufferfish.splice(j, 1);
     j--; 
     score++; 
             }
         }
 
-        for (var k = 0; k < bats.length; k++) {
-            if (ImagesTouching(bug, bats[k])) {
+        for (var k = 0; k < Pufferfish.length; k++) {
+            if (ImagesTouching(Paw, Pufferfish[k])) {
                 game_over = true; 
                 break; 
             }
@@ -207,7 +206,7 @@ addEventListener("keydown", MyKeyDownHandler);
     if (game_over) ShowGameOver();
 }
 
-    MySprite.prototype.Do_Frame_Things = function() {
+    Player.prototype.Do_Frame_Things = function() {
         if ((this.velocity_x < 0) && (this.x > 0))  this.x = this.x + this.velocity_x;
 
         if ((this.velocity_x > 0) && (this.x + this.MyImg.width < myCanvas.width )) this.x = this.x + this.velocity_x;
@@ -218,19 +217,19 @@ addEventListener("keydown", MyKeyDownHandler);
         }       
 
     function MyKeyUpHandler (MyEvent) { 
-        if (MyEvent.keyCode == 37) {bug.velocity_x=  0};    
-        if (MyEvent.keyCode == 38) {bug.velocity_y=  0};    
-        if (MyEvent.keyCode == 39) {bug.velocity_x=  0};    
-        if (MyEvent.keyCode == 40) {bug.velocity_y=  0};    
+        if (MyEvent.keyCode == 37) {Paw.velocity_x=  0};    
+        if (MyEvent.keyCode == 38) {Paw.velocity_y=  0};    
+        if (MyEvent.keyCode == 39) {Paw.velocity_x=  0};    
+        if (MyEvent.keyCode == 40) {Paw.velocity_y=  0};    
    }
 
     var quickness = 6
 
     function MyKeyDownHandler (MyEvent) { 
-        if (MyEvent.keyCode == 37) {bug.velocity_x=  -quickness};     
-        if (MyEvent.keyCode == 38) {bug.velocity_y=  -quickness};      
-        if (MyEvent.keyCode == 39) {bug.velocity_x=   quickness};      
-        if (MyEvent.keyCode == 40) {bug.velocity_y=   quickness};      
+        if (MyEvent.keyCode == 37) {Paw.velocity_x=  -quickness};     
+        if (MyEvent.keyCode == 38) {Paw.velocity_y=  -quickness};      
+        if (MyEvent.keyCode == 39) {Paw.velocity_x=   quickness};      
+        if (MyEvent.keyCode == 40) {Paw.velocity_y=   quickness};      
         if (MyEvent.keyCode == 83 && game_over) restart_game();    
         MyEvent.preventDefault()
    }
